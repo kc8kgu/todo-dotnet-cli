@@ -1,0 +1,17 @@
+{
+    "configurations": 
+    [
+        {
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/Debug/net10.0/todo-dotnet-cli.dll",
+//            "args": ["edit", "2", "git add *"],
+            "args": ["clear"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ]
+}

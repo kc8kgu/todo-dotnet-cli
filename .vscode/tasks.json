@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "build C:\\code\\todo-dotnet-cli\\todo-dotnet-cli.csproj",
+			"file": "C:\\code\\todo-dotnet-cli\\todo-dotnet-cli.csproj",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "build"
+		},
+	]
+}
