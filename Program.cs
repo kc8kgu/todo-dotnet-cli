@@ -19,33 +19,43 @@ class Program
     {
         try
         {
-            if (args.Length == 1 && args[0] == "list")
+            if (args.Length == 0)
+            {
+                Usage();
+            }
+            else if (args.Length == 1 && args[0] == "list")
             {
                 ListTodos();
             }
             else if (args.Length == 2 && args[0] == "add")
             {
-                AddTodos();
+                AddTodos(args[1]);
             }
             else if (args.Length == 3 && args[0] == "edit")
             {
-                EditTodos();
+                EditTodos(args[1], args[2]);
             }
             else if (args.Length == 2 && args[0] == "done")
             {
-                DoneTodos();
+                DoneTodos(args[1]);
             }
             else if (args.Length == 2 && args[0] == "delete")
             {
-                DeleteTodos();
+                DeleteTodos(args[1]);
             }
             else if (args.Length == 1 && args[0] == "clear")
             {
                 ClearTodos();
             }
-            else 
+            else if (args.Length == 1)
             {
+                Console.WriteLine($"Unknown command: {args[0]}.");
                 Usage();
+            } else
+            {
+                Console.WriteLine($"Wrong number of parameters for command: {args[0]}.");
+                Usage();
+                
             }
         }
         catch (Exception e)
@@ -57,137 +67,142 @@ class Program
 
     static void Usage()
     {
-        Console.WriteLine("usage: td <list|add|edit|done|delete|clear> <id> <title>");
+        Console.WriteLine();
+        Console.WriteLine("usage: td <command> [<args>]");
+        Console.WriteLine();
+        Console.WriteLine("commands:");
+        Console.WriteLine("  list                  list all todos");
+        Console.WriteLine("  add          <title>  add a new todo");
+        Console.WriteLine("  edit    <id> <title>  edit the title of a todo");
+        Console.WriteLine("  done    <id>          toggle the done status of a todo");
+        Console.WriteLine("  delete  <id>          delete a todo");
+        Console.WriteLine("  clear                 delete all todos");
+        Console.WriteLine();
     }
 
     static int GetNextId()
     {
-        int MaxId = 0;
-        return 1 + MaxId;
+        int maxId = 0;
+
+        foreach (var todo in Todos)
+        {
+            if (maxId < todo.Id)
+            {
+                maxId = todo.Id;
+            }
+        }
+
+        return 1 + maxId;
     }
 
     static void LoadTodos()
     {
         if (File.Exists(PATH))
         {
-            var JsonText = File.ReadAllText(PATH);
-            Todos = JsonSerializer.Deserialize<List<Todo>>(JsonText) ?? Todos;
-        }
-        else
-        {
-            Todos.Add(new Todo() { Id = 1, Done = false, Title = "get init" });
-            Todos.Add(new Todo() { Id = 2, Done = false, Title = "get add ." });
-            Todos.Add(new Todo() { Id = 3, Done = false, Title = "get commit -m \"initial commit\"" });
+            var jsonText = File.ReadAllText(PATH);
+            Todos = JsonSerializer.Deserialize<List<Todo>>(jsonText) ?? Todos;
         }
     }
 
     static void SaveTodos()
     {
-        var DeserialzerOptions = new JsonSerializerOptions() {WriteIndented = true, IndentSize = 4};
-        var JsonText = JsonSerializer.Serialize(Todos, DeserialzerOptions);
-        File.WriteAllText(PATH, JsonText);
+        var serializerOptions = new JsonSerializerOptions() {WriteIndented = true, IndentSize = 4};
+        var jsonText = JsonSerializer.Serialize(Todos, serializerOptions);
+        File.WriteAllText(PATH, jsonText);
     }
 
     static void ListTodos()
     {
         LoadTodos();
 
-        foreach (var Todo in Todos)
+        foreach (var todo in Todos)
         {
-            Console.WriteLine($"{Todo.Id}, {Todo.Done}, {Todo.Title}");
+            Console.WriteLine($"{todo.Id}, {todo.Done}, {todo.Title}");
         }
     }
 
-    static void AddTodos()
+    static void AddTodos(string title)
     {
         LoadTodos();
 
-        var NextId = GetNextId();
-        var Title = Environment.GetCommandLineArgs()[1];
+        var nextId = GetNextId();
 
-        var NewTodo = new Todo() {Id = NextId, Done = false, Title = Title};
-        Todos.Add(NewTodo);
+        var newTodo = new Todo() {Id = nextId, Done = false, Title = title};
+        Todos.Add(newTodo);
 
         SaveTodos();
     }
 
-    static void EditTodos()
+    static void EditTodos(string idStr, string title)
     {
-        bool Found = false;
+        bool found = false;
 
         LoadTodos();
 
-        string IdStr = Environment.GetCommandLineArgs()[2];
-        string Title = Environment.GetCommandLineArgs()[3];
-
-        if (!int.TryParse(IdStr, out int Id))
+        if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param not an integer: {IdStr}");
+            Console.WriteLine($"Id param not an integer: {idStr}");
             return;
         }
 
-        foreach (var Todo in Todos)
+        foreach (var todo in Todos)
         {
-            if (Todo.Id == Id)
+            if (todo.Id == id)
             {
-                Todo.Title = Title;
-                Found = true;
+                todo.Title = title;
+                found = true;
                 break;
             }
         }
 
-        if (Found)
-        { 
+        if (found)
+        {
             SaveTodos();
         } else
         {
-            Console.WriteLine($"Id not found: {Id}");          
+            Console.WriteLine($"Id not found: {id}");
         }
     }
 
-    static void DoneTodos()
+    static void DoneTodos(string idStr)
     {
-        bool Found = false;
+        bool found = false;
 
         LoadTodos();
 
-        string IdStr = Environment.GetCommandLineArgs()[2];
-
-        if (!int.TryParse(IdStr, out int Id))
+        if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param not an integer: {IdStr}");
+            Console.WriteLine($"Id param is not an integer: {idStr}");
             return;
         }
 
-        foreach (var Todo in Todos)
+        foreach (var todo in Todos)
         {
-            if (Todo.Id == Id)
+            if (todo.Id == id)
             {
-                Todo.Done = !Todo.Done;
-                Found = true;
+                todo.Done = !todo.Done;
+                found = true;
                 break;
             }
         }
 
-        if (Found) 
+        if (found)
         {
             SaveTodos();
         }
         else
         {
-            Console.WriteLine($"Id not found: {Id}");          
+            Console.WriteLine($"Id not found: {id}");
         }
     }
 
-    static void DeleteTodos()
+    static void DeleteTodos(string idStr)
     {
-        bool Found = false;
+        bool found = false;
 
-        string IdStr = Environment.GetCommandLineArgs()[2];
-
-        if (!int.TryParse(IdStr, out int Id))
+        if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param not an integer: {IdStr}");
+            Console.WriteLine($"Id param not an integer: {idStr}");
             return;
         }
 
@@ -195,22 +210,22 @@ class Program
 
         for (int i = 0; i < Todos.Count; i++)
         {
-            if (Todos[i].Id == Id)
+            if (Todos[i].Id == id)
             {
                 Todos.RemoveAt(i);
-                Found = true;
+                found = true;
                 break;
             }
         }
 
-        if (Found)
+        if (found)
         {
             SaveTodos();
         } else
         {
-            Console.WriteLine($"Id not found: {Id}");
+            Console.WriteLine($"Id not found: {id}");
         }
-        
+
     }
 
     static void ClearTodos()
@@ -220,7 +235,7 @@ class Program
             File.Delete(PATH);
         } else
         {
-            Console.WriteLine($"File not found: {PATH}")
+            Console.WriteLine($"File not found: {PATH}");
         }
     }
 
