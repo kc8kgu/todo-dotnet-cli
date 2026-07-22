@@ -6,7 +6,7 @@
     },
     {
         "Id": 2,
-        "Done": true,
+        "Done": false,
         "Title": "git add ."
     },
     {

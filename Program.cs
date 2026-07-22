@@ -53,14 +53,16 @@ class Program
                 Usage();
             } else
             {
-                Console.WriteLine($"Wrong number of parameters for command: {args[0]}.");
+                Console.WriteLine("Wrong number of parameters or unknown command.");
                 Usage();
                 
             }
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Exception: {e.ToString()}");
+            Console.WriteLine($"Unknown exception occured: {e.Message}");
+            Console.WriteLine();
+            Console.WriteLine(e.ToString());
         }
 
     }
@@ -99,16 +101,30 @@ class Program
     {
         if (File.Exists(PATH))
         {
-            var jsonText = File.ReadAllText(PATH);
-            Todos = JsonSerializer.Deserialize<List<Todo>>(jsonText) ?? Todos;
+            try
+            {
+                var jsonText = File.ReadAllText(PATH);
+                Todos = JsonSerializer.Deserialize<List<Todo>>(jsonText) ?? Todos;
+            }
+            catch (Exception e)
+            {
+                throw new Exception($"Error occured while parsing json: {e.Message}");
+            }
         }
     }
 
     static void SaveTodos()
     {
-        var serializerOptions = new JsonSerializerOptions() {WriteIndented = true, IndentSize = 4};
-        var jsonText = JsonSerializer.Serialize(Todos, serializerOptions);
-        File.WriteAllText(PATH, jsonText);
+        try
+        {
+            var serializerOptions = new JsonSerializerOptions() {WriteIndented = true, IndentSize = 4};
+            var jsonText = JsonSerializer.Serialize(Todos, serializerOptions);
+            File.WriteAllText(PATH, jsonText);
+        } 
+        catch (Exception e)
+        {
+                throw new Exception($"Error occured while saving json: {e.Message}");
+        }
     }
 
     static void ListTodos()
@@ -117,13 +133,20 @@ class Program
 
         foreach (var todo in Todos)
         {
-            Console.WriteLine($"{todo.Id}, {todo.Done}, {todo.Title}");
+            var todoDoneIndicator = todo.Done ? "✅" : "❌";
+            Console.WriteLine($"{todo.Id, 4:#000} : {todoDoneIndicator} - {todo.Title}");
         }
     }
 
     static void AddTodos(string title)
     {
         LoadTodos();
+
+        if (string.IsNullOrEmpty(title))
+        {
+            Console.WriteLine("Error: title parameter is empty or null.");
+            return;
+        }
 
         var nextId = GetNextId();
 
@@ -137,13 +160,19 @@ class Program
     {
         bool found = false;
 
-        LoadTodos();
-
         if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param not an integer: {idStr}");
+            Console.WriteLine($"Error: id parameter is not a positive integer: {idStr}");
             return;
         }
+
+        if (id <= 0)
+        {
+            Console.WriteLine("Error: Todo ids must be a positive integer.");
+            return;
+        }
+
+        LoadTodos();
 
         foreach (var todo in Todos)
         {
@@ -160,7 +189,7 @@ class Program
             SaveTodos();
         } else
         {
-            Console.WriteLine($"Id not found: {id}");
+            Console.WriteLine($"Error: id not found - {id}");
         }
     }
 
@@ -168,13 +197,19 @@ class Program
     {
         bool found = false;
 
-        LoadTodos();
-
         if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param is not an integer: {idStr}");
+            Console.WriteLine($"Error - id parameter is not a positive integer - {idStr}");
             return;
         }
+
+        if (id <= 0)
+        {
+            Console.WriteLine("Error: Todo ids must be a positive integer.");
+            return;
+        }
+
+        LoadTodos();
 
         foreach (var todo in Todos)
         {
@@ -192,7 +227,7 @@ class Program
         }
         else
         {
-            Console.WriteLine($"Id not found: {id}");
+            Console.WriteLine($"Error: id not found - {id}");
         }
     }
 
@@ -202,7 +237,13 @@ class Program
 
         if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Id param not an integer: {idStr}");
+            Console.WriteLine($"Error: id parameter is not a positive integer: {idStr}");
+            return;
+        }
+
+        if (id <= 0)
+        {
+            Console.WriteLine("Error: Todo ids must be a positive integer.");
             return;
         }
 
@@ -221,21 +262,25 @@ class Program
         if (found)
         {
             SaveTodos();
-        } else
+        } 
+        else
         {
-            Console.WriteLine($"Id not found: {id}");
+            Console.WriteLine($"Error: id not found - {id}");
         }
 
     }
 
     static void ClearTodos()
     {
+        Todos.Clear();
+
         if (File.Exists(PATH)) 
         {
             File.Delete(PATH);
-        } else
+        } 
+        else
         {
-            Console.WriteLine($"File not found: {PATH}");
+            Console.WriteLine($"Error: file not found - {PATH}");
         }
     }
 
