@@ -199,7 +199,7 @@ class Program
 
         if (!int.TryParse(idStr, out int id))
         {
-            Console.WriteLine($"Error - id parameter is not a positive integer - {idStr}");
+            Console.WriteLine($"Error: id parameter is not a positive integer - {idStr}");
             return;
         }
 
